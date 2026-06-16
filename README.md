@@ -24,4 +24,4 @@ Moreover, the system generates a comprehensive log file named "activity.txt" tha
 9. SQL Database
 
 ## Contact 
-For any feedback or queries, please reach out to me at [LinkedIn](https://www.linkedin.com/in/deyaa-alshiekh-9b17352a1)
+For any feedback or queries, please reach out to me at [Deyaa Alshiekh](https://www.linkedin.com/in/deyaa-alshiekh-9b17352a1)
