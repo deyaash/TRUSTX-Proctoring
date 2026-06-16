@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUSTX — لوحة التحكم</title>
+    <link rel="stylesheet" href="../static/trustix.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--tx-font-ar); background:var(--tx-bg); color:var(--tx-white); min-height:100vh; }
+
+        .page-main { max-width:960px; margin:36px auto; padding:0 20px 60px; position:relative; z-index:1; }
+
+        .welcome { margin-bottom:32px; }
+        .welcome h1 { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .welcome p  { color:var(--tx-muted); font-size:14px; }
+        .welcome h1 span { color:var(--tx-green); }
+
+        /* Action cards */
+        .actions { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:36px; }
+        .action-card {
+            background:var(--tx-surface); border:1px solid var(--tx-border);
+            border-radius:16px; padding:28px 24px;
+            cursor:pointer; transition:all .25s; text-decoration:none; color:inherit;
+            display:flex; flex-direction:column; gap:14px;
+        }
+        .action-card:hover {
+            border-color:var(--tx-green);
+            box-shadow:0 0 28px var(--tx-green-glow);
+            transform:translateY(-2px);
+        }
+        .card-icon {
+            width:50px; height:50px; border-radius:12px;
+            display:flex; align-items:center; justify-content:center; font-size:20px;
+        }
+        .card-icon.green { background:var(--tx-green-dim); color:var(--tx-green); }
+        .card-icon.blue  { background:rgba(56,139,253,.12); color:#58a6ff; }
+        .card-title { font-size:16px; font-weight:700; }
+        .card-desc  { font-size:13px; color:var(--tx-muted); line-height:1.6; }
+
+        /* Section */
+        .section-hdr {
+            display:flex; align-items:center; gap:8px;
+            font-size:14px; font-weight:700; color:var(--tx-muted);
+            text-transform:uppercase; letter-spacing:.5px;
+            margin-bottom:14px;
+        }
+        .section-hdr i { color:var(--tx-green); }
+
+        /* Exams table */
+        .table-wrap {
+            background:var(--tx-surface); border:1px solid var(--tx-border);
+            border-radius:14px; overflow:hidden;
+        }
+
+        .action-link {
+            display:inline-flex; align-items:center; gap:5px;
+            font-size:12px; font-weight:700; padding:5px 10px;
+            border-radius:6px; text-decoration:none; transition:.2s;
+        }
+        .action-link.green { color:var(--tx-green); background:var(--tx-green-dim); }
+        .action-link.green:hover { background:rgba(63,185,80,.25); }
+        .action-link.blue  { color:#58a6ff; background:rgba(56,139,253,.12); }
+        .action-link.blue:hover  { background:rgba(56,139,253,.22); }
+
+        .empty { text-align:center; padding:48px; color:var(--tx-muted); }
+        .empty i { font-size:36px; margin-bottom:12px; display:block; opacity:.4; }
+
+        .tx-badge-code {
+            background:var(--tx-surface2); border:1px solid var(--tx-border);
+            color:var(--tx-green); font-family:monospace; font-size:12px;
+            font-weight:700; letter-spacing:2px;
+            padding:4px 10px; border-radius:6px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="trustix-canvas"></canvas>
+
+<!-- Header -->
+<header class="tx-header tx-content">
+    <div class="tx-logo">
+        <div class="tx-logo-icon">T</div>
+        TRUST<span style="color:var(--tx-green)">IX</span>
+    </div>
+    <div style="flex:1"></div>
+    <button class="lang-btn-shared" onclick="toggleLang()">
+        <i class="fas fa-globe"></i><span id="langLabel">EN</span>
+    </button>
+    <button class="tx-btn tx-btn-ghost" onclick="window.location.href='/'" style="font-size:13px;padding:7px 14px;">
+        <i class="fas fa-sign-out-alt"></i> <span data-ar="خروج" data-en="Logout">خروج</span>
+    </button>
+</header>
+
+<div class="page-main">
+    <div class="welcome">
+        <h1 data-ar="مرحباً في TRUSTX" data-en="Welcome to TRUSTX">مرحباً في <span>TRUSTX</span></h1>
+        <p data-ar="إدارة الامتحانات الذكية المراقَبة بالذكاء الاصطناعي" data-en="AI-Powered Smart Exam Management">إدارة الامتحانات الذكية المراقَبة بالذكاء الاصطناعي</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <a class="action-card" href="/create_exam">
+            <div class="card-icon green"><i class="fas fa-plus-circle"></i></div>
+            <div>
+                <div class="card-title" data-ar="إنشاء امتحان جديد" data-en="Create New Exam">إنشاء امتحان جديد</div>
+                <div class="card-desc" data-ar="أضف أسئلتك وحدد كلمة سر سرية يستخدمها الطلاب للدخول" data-en="Add your questions and set a secret code for students to join">أضف أسئلتك وحدد كلمة سر سرية يستخدمها الطلاب للدخول</div>
+            </div>
+        </a>
+        <a class="action-card" href="/join_exam">
+            <div class="card-icon blue"><i class="fas fa-key"></i></div>
+            <div>
+                <div class="card-title" data-ar="دخول امتحان" data-en="Join Exam">دخول امتحان</div>
+                <div class="card-desc" data-ar="أدخل كود الامتحان الذي أعطاك إياه المشرف" data-en="Enter the exam code given to you by the supervisor">أدخل كود الامتحان الذي أعطاك إياه المشرف</div>
+            </div>
+        </a>
+    </div>
+
+    <!-- My Exams -->
+    <div class="section-hdr"><i class="fas fa-folder"></i> <span data-ar="امتحاناتي" data-en="My Exams">امتحاناتي</span></div>
+    <div class="table-wrap" id="tableWrap">
+        <div class="empty"><i class="fas fa-folder-open"></i><span data-ar="جارٍ التحميل..." data-en="Loading...">جارٍ التحميل...</span></div>
+    </div>
+</div>
+
+<script src="../static/plexus.js"></script>
+<script src="../static/i18n.js"></script>
+<script>
+const TBL = {
+    ar: { title:'العنوان', code:'الكود السري', dur:'المدة', date:'تاريخ الإنشاء', actions:'الإجراءات',
+          min:'د', analytics:'تحليل', enter:'دخول',
+          empty:'لم تنشئ أي امتحان بعد — ابدأ بإنشاء أول امتحان',
+          noExams:'لا توجد امتحانات بعد' },
+    en: { title:'Title', code:'Secret Code', dur:'Duration', date:'Created At', actions:'Actions',
+          min:'min', analytics:'Analytics', enter:'Enter',
+          empty:'No exams yet — create your first exam',
+          noExams:'No exams found' }
+};
+
+let _exams = [];
+
+function renderTable() {
+    const lang = getCurrentLang();
+    const t = TBL[lang];
+    const box = document.getElementById('tableWrap');
+    if (!_exams.length) {
+        box.innerHTML = `<div class="empty"><i class="fas fa-folder-open"></i>${t.empty}</div>`;
+        return;
+    }
+    box.innerHTML = `<table class="tx-table">
+        <thead><tr>
+            <th>${t.title}</th><th>${t.code}</th><th>${t.dur}</th><th>${t.date}</th><th>${t.actions}</th>
+        </tr></thead>
+        <tbody>${_exams.map(e=>`<tr>
+            <td style="font-weight:600;color:var(--tx-white)">${e.title}</td>
+            <td><span class="tx-badge-code">${e.password}</span></td>
+            <td style="color:var(--tx-muted)">${e.duration} ${t.min}</td>
+            <td style="color:var(--tx-muted);font-size:12px">${e.created_at}</td>
+            <td><div style="display:flex;gap:8px">
+                <a class="action-link green" href="/exam_analytics/${e.id}"><i class="fas fa-chart-bar"></i> ${t.analytics}</a>
+                <a class="action-link blue"  href="/quiz_html?exam_id=${e.id}"><i class="fas fa-sign-in-alt"></i> ${t.enter}</a>
+            </div></td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+fetch('/my_exams').then(r=>r.json()).then(exams => {
+    _exams = exams;
+    renderTable();
+}).catch(()=>{
+    const lang = getCurrentLang();
+    document.getElementById('tableWrap').innerHTML =
+        `<div class="empty"><i class="fas fa-folder-open"></i>${TBL[lang].noExams}</div>`;
+});
+
+document.addEventListener('langchange', renderTable);
+</script>
+</body>
+</html>

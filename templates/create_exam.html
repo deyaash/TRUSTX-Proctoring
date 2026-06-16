@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUSTX — إنشاء امتحان</title>
+    <link rel="stylesheet" href="../static/trustix.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--tx-font-ar); background:var(--tx-bg); color:var(--tx-white); min-height:100vh; }
+
+        .main { max-width:800px; margin:28px auto; padding:0 20px 80px; position:relative; z-index:1; }
+        .page-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+        .page-sub { color:var(--tx-muted); font-size:13px; margin-bottom:28px; }
+
+        .section {
+            background:var(--tx-surface); border:1px solid var(--tx-border);
+            border-radius:14px; padding:24px; margin-bottom:18px;
+        }
+        .sec-title {
+            font-size:13px; font-weight:700; color:var(--tx-muted);
+            text-transform:uppercase; letter-spacing:.5px;
+            margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--tx-border);
+            display:flex; align-items:center; gap:8px;
+        }
+        .sec-title i { color:var(--tx-green); }
+
+        .field { margin-bottom:16px; }
+        .row2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+        /* Question block */
+        .q-block {
+            background:var(--tx-bg); border:1px solid var(--tx-border);
+            border-radius:10px; padding:18px; margin-bottom:14px; position:relative;
+        }
+        .q-block:hover { border-color:var(--tx-surface2); }
+        .q-num { font-size:12px; font-weight:700; color:var(--tx-green); margin-bottom:12px;
+            text-transform:uppercase; letter-spacing:.5px; }
+        .opts-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+        .opt-row { display:flex; align-items:center; gap:8px; }
+        .opt-lbl { font-size:12px; color:var(--tx-muted); width:18px; flex-shrink:0; font-weight:700; }
+        .remove-q {
+            position:absolute; top:12px; left:12px;
+            background:none; border:1px solid var(--tx-border); border-radius:6px;
+            cursor:pointer; color:var(--tx-muted); padding:5px 8px; font-size:13px; transition:.2s;
+        }
+        .remove-q:hover { border-color:var(--tx-danger); color:var(--tx-danger); background:rgba(248,81,73,.1); }
+
+        .correct-row { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--tx-muted); }
+        .tx-select {
+            background:var(--tx-surface2); border:1px solid var(--tx-border);
+            border-radius:8px; padding:7px 12px; color:var(--tx-white);
+            font-family:var(--tx-font-ar); font-size:13px; outline:none; cursor:pointer;
+        }
+        .tx-select:focus { border-color:var(--tx-green); }
+
+        .add-q-btn {
+            width:100%; padding:13px; border:2px dashed var(--tx-border); border-radius:10px;
+            background:none; cursor:pointer; color:var(--tx-muted);
+            font-family:var(--tx-font-ar); font-size:14px; transition:.2s;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+        }
+        .add-q-btn:hover { border-color:var(--tx-green); color:var(--tx-green); background:var(--tx-green-dim); }
+
+        .save-btn {
+            width:100%; padding:14px; border:none; border-radius:12px;
+            background:var(--tx-green); color:#0d1117;
+            font-family:var(--tx-font-ar); font-size:16px; font-weight:800;
+            cursor:pointer; transition:.2s;
+            display:flex; align-items:center; justify-content:center; gap:10px;
+            margin-top:20px;
+        }
+        .save-btn:hover { background:#4dca5f; box-shadow:0 0 24px var(--tx-green-glow); }
+        .save-btn:disabled { background:var(--tx-surface2); color:var(--tx-muted); cursor:not-allowed; box-shadow:none; }
+
+        .code-preview {
+            background:var(--tx-bg); border:1px solid var(--tx-border);
+            border-radius:8px; padding:10px 14px; margin-top:8px;
+            font-family:monospace; font-size:18px; font-weight:700;
+            color:var(--tx-green); letter-spacing:4px; text-align:center;
+            min-height:42px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="trustix-canvas"></canvas>
+
+<header class="tx-header tx-content">
+    <button class="tx-btn tx-btn-ghost" onclick="window.location.href='/dashboard'" style="font-size:13px;padding:7px 14px;">
+        <i class="fas fa-arrow-right"></i> <span data-ar="رجوع" data-en="Back">رجوع</span>
+    </button>
+    <div class="tx-logo" style="font-size:15px;">
+        <div class="tx-logo-icon" style="width:26px;height:26px;font-size:13px;">T</div>
+        TRUST<span>X</span>
+    </div>
+    <div style="flex:1"></div>
+    <button class="lang-btn-shared" onclick="toggleLang()">
+        <i class="fas fa-globe"></i><span id="langLabel">EN</span>
+    </button>
+</header>
+
+<div class="main">
+    <div class="page-title" data-ar="إنشاء امتحان جديد" data-en="Create New Exam">إنشاء امتحان جديد</div>
+    <div class="page-sub" data-ar="أضف الأسئلة والإجابات ثم شارك الكود السري مع طلابك" data-en="Add questions and answers, then share the secret code with your students">أضف الأسئلة والإجابات ثم شارك الكود السري مع طلابك</div>
+
+    <!-- Info -->
+    <div class="section">
+        <div class="sec-title"><i class="fas fa-info-circle"></i> <span data-ar="معلومات الامتحان" data-en="Exam Info">معلومات الامتحان</span></div>
+
+        <div class="field">
+            <label class="tx-label" data-ar="عنوان الامتحان *" data-en="Exam Title *">عنوان الامتحان *</label>
+            <input class="tx-input" id="examTitle" type="text"
+                   data-placeholder-ar="مثال: امتحان الفيزياء — الفصل الثاني"
+                   data-placeholder-en="e.g. Physics Exam — Chapter 2"
+                   placeholder="مثال: امتحان الفيزياء — الفصل الثاني">
+        </div>
+
+        <div class="row2">
+            <div class="field">
+                <label class="tx-label" data-ar="الكود السري *" data-en="Secret Code *">الكود السري *</label>
+                <input class="tx-input" id="examPassword" type="text" placeholder="e.g. PHY2024"
+                       oninput="this.value=this.value.toUpperCase();updatePreview()"
+                       style="letter-spacing:3px;font-weight:700;">
+                <div class="code-preview" id="codePreview">—</div>
+            </div>
+            <div class="field">
+                <label class="tx-label" data-ar="مدة الامتحان (بالدقائق) *" data-en="Duration (minutes) *">مدة الامتحان (بالدقائق) *</label>
+                <input class="tx-input" id="examDuration" type="number" value="15" min="1" max="180">
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions -->
+    <div class="section">
+        <div class="sec-title"><i class="fas fa-list-ol"></i> <span data-ar="الأسئلة" data-en="Questions">الأسئلة</span></div>
+        <div id="questionsContainer"></div>
+        <button class="add-q-btn" onclick="addQuestion()">
+            <i class="fas fa-plus"></i> <span data-ar="إضافة سؤال" data-en="Add Question">إضافة سؤال</span>
+        </button>
+    </div>
+
+    <button class="save-btn" id="saveBtn" onclick="saveExam()">
+        <i class="fas fa-save"></i> <span data-ar="حفظ الامتحان ونشره" data-en="Save & Publish Exam">حفظ الامتحان ونشره</span>
+    </button>
+</div>
+
+<div class="tx-toast" id="toast"></div>
+
+<script src="../static/plexus.js"></script>
+<script src="../static/i18n.js"></script>
+<script>
+let qCount = 0;
+const optLabels = { ar:['أ','ب','ج','د'], en:['A','B','C','D'] };
+
+const CE = {
+    ar: { q:'السؤال', qph:'نص السؤال...', optph:'الخيار', correct:'الإجابة الصحيحة:', del:'حذف',
+          fillInfo:'يرجى ملء العنوان والكود السري', badDur:'مدة الامتحان يجب أن تكون أكبر من صفر',
+          fillQ:'يرجى ملء نص جميع الأسئلة', fillOpts:'يرجى ملء جميع خيارات كل سؤال',
+          addOne:'أضف سؤالاً واحداً على الأقل', saving:'جارٍ الحفظ...', saved:'تم إنشاء الامتحان — الكود: ',
+          saveErr:'خطأ في الحفظ', connErr:'خطأ في الاتصال بالخادم',
+          saveLbl:'حفظ الامتحان ونشره' },
+    en: { q:'Question', qph:'Question text...', optph:'Option', correct:'Correct Answer:', del:'Delete',
+          fillInfo:'Please fill in the title and secret code', badDur:'Duration must be greater than zero',
+          fillQ:'Please fill in all question texts', fillOpts:'Please fill in all options for each question',
+          addOne:'Add at least one question', saving:'Saving...', saved:'Exam created — Code: ',
+          saveErr:'Error saving', connErr:'Server connection error',
+          saveLbl:'Save & Publish Exam' }
+};
+
+function updatePreview() {
+    const v = document.getElementById('examPassword').value;
+    document.getElementById('codePreview').textContent = v || '—';
+}
+
+function addQuestion() {
+    qCount++;
+    const n    = qCount;
+    const lang = getCurrentLang();
+    const t    = CE[lang];
+    const lbl  = optLabels[lang];
+    const el   = document.createElement('div');
+    el.className = 'q-block'; el.id = 'qblock'+n;
+    el.innerHTML = `
+        <button class="remove-q" onclick="document.getElementById('qblock${n}').remove()" title="${t.del}">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="q-num"><i class="fas fa-question-circle"></i> ${t.q} ${n}</div>
+        <div class="field">
+            <input class="tx-input" id="qtext${n}" placeholder="${t.qph}" style="margin-bottom:0">
+        </div>
+        <div class="opts-grid" style="margin-top:10px">
+            ${[0,1,2,3].map(j=>`
+            <div class="opt-row">
+                <span class="opt-lbl">${lbl[j]}</span>
+                <input class="tx-input" id="opt${n}_${j}" placeholder="${t.optph} ${lbl[j]}" style="font-size:13px;padding:9px 12px">
+            </div>`).join('')}
+        </div>
+        <div class="correct-row" style="margin-top:10px">
+            <i class="fas fa-check-circle" style="color:var(--tx-green)"></i>
+            <span>${t.correct}</span>
+            <select class="tx-select" id="correct${n}">
+                ${[0,1,2,3].map(j=>`<option value="${j}">${lbl[j]}</option>`).join('')}
+            </select>
+        </div>`;
+    document.getElementById('questionsContainer').appendChild(el);
+}
+
+function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'tx-toast show ' + type;
+    setTimeout(()=>{ t.className='tx-toast'; }, 3500);
+}
+
+function saveExam() {
+    const lang = getCurrentLang();
+    const t    = CE[lang];
+    const title    = document.getElementById('examTitle').value.trim();
+    const password = document.getElementById('examPassword').value.trim();
+    const duration = parseInt(document.getElementById('examDuration').value);
+    if (!title || !password) { toast(t.fillInfo, 'err'); return; }
+    if (!duration || duration < 1) { toast(t.badDur, 'err'); return; }
+
+    const questions = [];
+    const blocks = document.querySelectorAll('.q-block');
+    for (const b of blocks) {
+        const id   = b.id.replace('qblock','');
+        const text = document.getElementById('qtext'+id)?.value.trim();
+        if (!text) { toast(t.fillQ, 'err'); return; }
+        const opts = [0,1,2,3].map(j => document.getElementById('opt'+id+'_'+j)?.value.trim()||'');
+        if (opts.some(o=>!o)) { toast(t.fillOpts, 'err'); return; }
+        const ci = parseInt(document.getElementById('correct'+id)?.value);
+        questions.push({ question:text, options:opts, answer:opts[ci] });
+    }
+    if (!questions.length) { toast(t.addOne, 'err'); return; }
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.saving}`;
+
+    fetch('/create_exam_data', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({title, password, questions, duration})
+    })
+    .then(r=>r.json())
+    .then(data => {
+        if (data.success) {
+            toast('✓ ' + t.saved + password, 'ok');
+            setTimeout(()=> window.location.href='/dashboard', 2000);
+        } else {
+            toast(data.message || t.saveErr, 'err');
+            btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${t.saveLbl}`;
+        }
+    })
+    .catch(()=>{
+        toast(t.connErr, 'err');
+        btn.disabled = false; btn.innerHTML = `<i class="fas fa-save"></i> ${t.saveLbl}`;
+    });
+}
+
+addQuestion();
+</script>
+</body>
+</html>

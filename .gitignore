@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# Model files (كبيرة جداً لـ GitHub — 100MB limit)
+shape_predictor_model/shape_predictor_68_face_landmarks.dat
+object_detection_model/weights/*.weights
+
+# dlib wheel (كبير)
+*.whl
+
+# Logs
+activity.txt
+
+# Build scripts
+build_docs2.py

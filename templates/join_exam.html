@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUSTX — دخول امتحان</title>
+    <link rel="stylesheet" href="../static/trustix.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:var(--tx-font-ar); background:var(--tx-bg); color:var(--tx-white);
+            min-height:100vh; display:flex; flex-direction:column;
+        }
+        .center { flex:1; display:flex; align-items:center; justify-content:center; padding:20px; position:relative; z-index:1; }
+        .box {
+            background:var(--tx-surface); border:1px solid var(--tx-border);
+            border-radius:20px; padding:40px 36px;
+            width:100%; max-width:420px; text-align:center;
+        }
+        .icon-wrap {
+            width:64px; height:64px; border-radius:16px;
+            background:var(--tx-green-dim); border:1px solid rgba(63,185,80,.3);
+            display:flex; align-items:center; justify-content:center;
+            margin:0 auto 20px; font-size:26px; color:var(--tx-green);
+            box-shadow:0 0 20px var(--tx-green-glow);
+        }
+        h1 { font-size:20px; font-weight:800; margin-bottom:6px; }
+        .desc { color:var(--tx-muted); font-size:13px; margin-bottom:28px; line-height:1.7; }
+
+        .field { margin-bottom:14px; text-align:right; }
+        .field-wrap { position:relative; }
+        .field-icon {
+            position:absolute; right:14px; top:50%; transform:translateY(-50%);
+            color:var(--tx-muted); font-size:14px;
+        }
+        .field-wrap .tx-input { padding-right:42px; }
+        .tx-input.code { letter-spacing:4px; font-weight:700; font-size:16px; text-align:center; }
+
+        .err-box {
+            background:rgba(248,81,73,.1); border:1px solid rgba(248,81,73,.3);
+            border-radius:8px; padding:10px 14px; font-size:13px; color:var(--tx-danger);
+            margin-bottom:14px; display:none; align-items:center; gap:8px;
+        }
+        .err-box.show { display:flex; }
+    </style>
+</head>
+<body>
+<canvas id="trustix-canvas"></canvas>
+
+<header class="tx-header tx-content">
+    <button class="tx-btn tx-btn-ghost" onclick="window.location.href='/dashboard'" style="font-size:13px;padding:7px 14px;">
+        <i class="fas fa-arrow-right"></i> <span data-ar="رجوع" data-en="Back">رجوع</span>
+    </button>
+    <div class="tx-logo" style="font-size:15px;">
+        <div class="tx-logo-icon" style="width:26px;height:26px;font-size:13px;">T</div>
+        TRUST<span>X</span>
+    </div>
+    <div style="flex:1"></div>
+    <button class="lang-btn-shared" onclick="toggleLang()">
+        <i class="fas fa-globe"></i><span id="langLabel">EN</span>
+    </button>
+</header>
+
+<div class="center">
+    <div class="box">
+        <div class="icon-wrap"><i class="fas fa-key"></i></div>
+        <h1 data-ar="دخول الامتحان" data-en="Join Exam">دخول الامتحان</h1>
+        <p class="desc" data-ar="أدخل اسمك والكود السري للامتحان الذي أعطاك إياه المشرف" data-en="Enter your name and the exam code given to you by the supervisor">أدخل اسمك والكود السري للامتحان<br>الذي أعطاك إياه المشرف</p>
+
+        <div class="err-box" id="errBox"><i class="fas fa-exclamation-circle"></i><span id="errTxt"></span></div>
+
+        <div class="field">
+            <label class="tx-label" style="text-align:right" data-ar="الاسم الكامل" data-en="Full Name">الاسم الكامل</label>
+            <div class="field-wrap">
+                <i class="field-icon fas fa-user"></i>
+                <input class="tx-input" id="studentName" type="text"
+                       data-placeholder-ar="أدخل اسمك الكامل" data-placeholder-en="Enter your full name"
+                       placeholder="أدخل اسمك الكامل"
+                       oninput="clearErr()" onkeydown="if(event.key==='Enter') document.getElementById('examPass').focus()">
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="tx-label" style="text-align:right" data-ar="كود الامتحان" data-en="Exam Code">كود الامتحان</label>
+            <div class="field-wrap">
+                <input class="tx-input code" id="examPass" type="text" placeholder="XXXXXXXX"
+                       oninput="this.value=this.value.toUpperCase();clearErr()"
+                       onkeydown="if(event.key==='Enter') joinExam()">
+            </div>
+        </div>
+
+        <button class="tx-btn tx-btn-primary" id="joinBtn" onclick="joinExam()" style="width:100%;font-size:15px;padding:13px;margin-top:4px;">
+            <i class="fas fa-sign-in-alt"></i> <span data-ar="دخول الامتحان" data-en="Join Exam">دخول الامتحان</span>
+        </button>
+    </div>
+</div>
+
+<script src="../static/plexus.js"></script>
+<script src="../static/i18n.js"></script>
+<script>
+const JE = {
+    ar: { noName:'يرجى إدخال اسمك الكامل', noCode:'يرجى إدخال كود الامتحان',
+          checking:'جارٍ التحقق...', done:'تم! جارٍ التحويل...',
+          wrongCode:'كود الامتحان غير صحيح', connErr:'خطأ في الاتصال بالخادم',
+          joinLbl:'دخول الامتحان' },
+    en: { noName:'Please enter your full name', noCode:'Please enter the exam code',
+          checking:'Verifying...', done:'Done! Redirecting...',
+          wrongCode:'Incorrect exam code', connErr:'Server connection error',
+          joinLbl:'Join Exam' }
+};
+
+function clearErr() {
+    document.getElementById('errBox').classList.remove('show');
+    document.getElementById('studentName').classList.remove('err');
+    document.getElementById('examPass').classList.remove('err');
+}
+function showErr(msg, field) {
+    document.getElementById('errTxt').textContent = msg;
+    document.getElementById('errBox').classList.add('show');
+    if (field) document.getElementById(field).classList.add('err');
+}
+function joinExam() {
+    const t    = JE[getCurrentLang()];
+    const name = document.getElementById('studentName').value.trim();
+    const pass = document.getElementById('examPass').value.trim();
+    if (!name) { showErr(t.noName, 'studentName'); return; }
+    if (!pass) { showErr(t.noCode, 'examPass');    return; }
+
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.checking}`;
+
+    fetch('/join_exam_data', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({password: pass, student_name: name})
+    })
+    .then(r=>r.json())
+    .then(data => {
+        if (data.success) {
+            btn.innerHTML = `<i class="fas fa-check"></i> ${t.done}`;
+            window.location.href = '/quiz_html?exam_id=' + data.exam_id;
+        } else {
+            showErr(data.message || t.wrongCode, 'examPass');
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.joinLbl}`;
+        }
+    })
+    .catch(()=>{
+        showErr(t.connErr);
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.joinLbl}`;
+    });
+}
+</script>
+</body>
+</html>

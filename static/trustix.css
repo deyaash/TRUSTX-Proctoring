@@ -1,0 +1,194 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ══════════════════════════════════════════════
+   TRUSTX — Design System
+══════════════════════════════════════════════ */
+:root {
+  --tx-bg:        #0d1117;
+  --tx-surface:   #161b22;
+  --tx-surface2:  #21262d;
+  --tx-border:    #30363d;
+  --tx-green:     #3fb950;
+  --tx-green-dim: #1a4a25;
+  --tx-green-glow:rgba(63,185,80,.18);
+  --tx-white:     #f0f6fc;
+  --tx-muted:     #8b949e;
+  --tx-danger:    #f85149;
+  --tx-warn:      #d29922;
+  --tx-radius:    10px;
+  --tx-font-ar:   'Cairo','Inter',sans-serif;
+  --tx-font-en:   'Inter','Cairo',sans-serif;
+}
+
+/* Canvas plexus background */
+#trustix-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Ensure content is above canvas */
+.tx-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Buttons ── */
+.tx-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border: none; border-radius: var(--tx-radius);
+  font-family: var(--tx-font-ar); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all .2s; text-decoration: none;
+}
+.tx-btn-primary {
+  background: var(--tx-green); color: #0d1117;
+}
+.tx-btn-primary:hover {
+  background: #4dca5f; box-shadow: 0 0 20px var(--tx-green-glow);
+}
+.tx-btn-outline {
+  background: transparent; color: var(--tx-green);
+  border: 1px solid var(--tx-green);
+}
+.tx-btn-outline:hover {
+  background: var(--tx-green-dim);
+}
+.tx-btn-ghost {
+  background: transparent; color: var(--tx-muted);
+  border: 1px solid var(--tx-border);
+}
+.tx-btn-ghost:hover { color: var(--tx-white); border-color: var(--tx-muted); }
+
+/* ── Cards ── */
+.tx-card {
+  background: var(--tx-surface);
+  border: 1px solid var(--tx-border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+/* ── Inputs ── */
+.tx-input {
+  width: 100%;
+  background: var(--tx-surface2);
+  border: 1px solid var(--tx-border);
+  border-radius: var(--tx-radius);
+  padding: 12px 16px;
+  color: var(--tx-white);
+  font-family: var(--tx-font-ar);
+  font-size: 14px;
+  outline: none;
+  transition: .2s;
+}
+.tx-input::placeholder { color: var(--tx-muted); }
+.tx-input:focus {
+  border-color: var(--tx-green);
+  box-shadow: 0 0 0 3px var(--tx-green-glow);
+}
+.tx-input.err { border-color: var(--tx-danger); }
+
+/* ── Header ── */
+.tx-header {
+  background: rgba(13,17,23,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--tx-border);
+  height: 56px;
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.tx-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 18px; font-weight: 800; color: var(--tx-white);
+  text-decoration: none; letter-spacing: .5px;
+}
+.tx-logo span { color: var(--tx-green); }
+.tx-logo-icon {
+  width: 32px; height: 32px;
+  background: var(--tx-green); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: #0d1117; font-weight: 900;
+}
+
+/* ── Lang Button (shared) ── */
+.lang-btn-shared {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--tx-surface2); border: 1px solid var(--tx-border);
+  color: var(--tx-muted); border-radius: 8px;
+  padding: 6px 13px; cursor: pointer; font-size: 13px; font-weight: 700;
+  transition: .2s; white-space: nowrap;
+}
+.lang-btn-shared:hover {
+  border-color: var(--tx-green); color: var(--tx-green);
+  background: var(--tx-green-dim);
+}
+
+/* ── Labels ── */
+.tx-label {
+  display: block;
+  font-size: 12px; font-weight: 600;
+  color: var(--tx-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* ── Badge ── */
+.tx-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.tx-badge-green { background: var(--tx-green-dim); color: var(--tx-green); }
+.tx-badge-red   { background: rgba(248,81,73,.15); color: var(--tx-danger); }
+.tx-badge-amber { background: rgba(210,153,34,.15); color: var(--tx-warn); }
+.tx-badge-gray  { background: var(--tx-surface2); color: var(--tx-muted); }
+
+/* ── Tables ── */
+.tx-table { width: 100%; border-collapse: collapse; }
+.tx-table th {
+  padding: 11px 16px; text-align: right;
+  font-size: 11px; font-weight: 700;
+  color: var(--tx-muted); text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 1px solid var(--tx-border);
+  background: var(--tx-surface2);
+}
+.tx-table td {
+  padding: 14px 16px; font-size: 13px;
+  color: var(--tx-white); border-bottom: 1px solid var(--tx-border);
+  vertical-align: top;
+}
+.tx-table tr:last-child td { border-bottom: none; }
+.tx-table tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ── Stat Cards ── */
+.tx-stat {
+  background: var(--tx-surface);
+  border: 1px solid var(--tx-border);
+  border-radius: 14px;
+  padding: 18px 16px;
+  text-align: center;
+}
+.tx-stat-val {
+  font-size: 28px; font-weight: 800;
+  color: var(--tx-white); margin-bottom: 4px;
+}
+.tx-stat-lbl { font-size: 11px; color: var(--tx-muted); text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Toast ── */
+.tx-toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--tx-surface); border: 1px solid var(--tx-border);
+  color: var(--tx-white); padding: 12px 24px; border-radius: 10px;
+  font-size: 14px; opacity: 0; transition: .3s; z-index: 999;
+  display: flex; align-items: center; gap: 8px;
+}
+.tx-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.tx-toast.ok   { border-color: var(--tx-green); color: var(--tx-green); }
+.tx-toast.err  { border-color: var(--tx-danger); color: var(--tx-danger); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--tx-bg); }
+::-webkit-scrollbar-thumb { background: var(--tx-border); border-radius: 3px; }

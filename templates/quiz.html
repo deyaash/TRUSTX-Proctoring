@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/style.css">
+    <title>TRUSTX — الامتحان</title>
+    <link rel="icon" href="../static/images/Portal.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<canvas id="trustix-canvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;"></canvas>
+
+<!-- ══════════════════════════════════════════════════
+     HEADER  — الشريط العلوي
+══════════════════════════════════════════════════ -->
+<header class="exam-header">
+
+    <!-- اليمين: زر رجوع + شعار TRUSTX + عنوان -->
+    <div class="hdr-brand">
+        <button onclick="confirmExit()" class="lang-btn" style="margin-left:6px;">
+            <i class="fas fa-arrow-right"></i>
+            <span data-ar="خروج" data-en="Exit">خروج</span>
+        </button>
+        <div style="width:28px;height:28px;border-radius:7px;background:var(--tx-green);
+             display:flex;align-items:center;justify-content:center;
+             font-size:13px;font-weight:900;color:#0d1117;flex-shrink:0;">T</div>
+        <span class="trustix-brand">TRUST<span>X</span></span>
+        <div style="width:1px;height:20px;background:var(--tx-border);margin:0 4px;"></div>
+        <span class="hdr-title" id="examTitle"
+              data-ar="امتحان نموذجي" data-en="Sample Exam">امتحان نموذجي</span>
+    </div>
+
+    <!-- الوسط: chips الحالة -->
+    <div class="hdr-chips" id="hdrChips">
+        <div class="chip chip-cam" id="chipCam">
+            <span class="chip-dot"></span>
+            <span data-ar="كاميرا" data-en="Camera">كاميرا</span>
+        </div>
+        <div class="chip" id="chipWindow">
+            <span class="chip-dot"></span>
+            <span data-ar="نافذة نشطة" data-en="Active Window">نافذة نشطة</span>
+        </div>
+        <div class="chip" id="chipFace">
+            <span class="chip-dot"></span>
+            <span id="chipFaceTxt" data-ar="وجه: جارٍ" data-en="Face: Init">وجه: جارٍ</span>
+        </div>
+        <div class="chip" id="chipGaze">
+            <span class="chip-dot"></span>
+            <span id="chipGazeTxt" data-ar="نظر: —" data-en="Gaze: —">نظر: —</span>
+        </div>
+        <div class="chip" id="chipPhone">
+            <span class="chip-dot chip-ok"></span>
+            <span id="chipPhoneTxt" data-ar="لا تلفون" data-en="No Phone">لا تلفون</span>
+        </div>
+    </div>
+
+    <!-- اليسار: مخالفات + وقت + لغة -->
+    <div class="hdr-right">
+        <div class="viol-badge-hdr">
+            <span data-ar="مخالفات:" data-en="Violations:">مخالفات:</span>
+            <span id="violBadgeHdr">0</span>/<span id="maxViolHdr">5</span>
+        </div>
+        <div class="hdr-timer" id="hdrTimer">15:00</div>
+        <button class="lang-btn" onclick="toggleLang()">
+            <i class="fas fa-globe"></i><span id="langLabel">EN</span>
+        </button>
+    </div>
+
+</header>
+
+<!-- ══════════════════════════════════════════════════
+     BODY  — sidebar + main
+══════════════════════════════════════════════════ -->
+<div class="exam-body">
+
+    <!-- ── Sidebar ── -->
+    <aside class="exam-sidebar">
+
+        <!-- كاميرا -->
+        <div class="cam-widget">
+            <img src="{{ url_for('video_feed') }}" id="videoElement"
+                 onerror="this.style.display='none';document.getElementById('camErr').style.display='flex'">
+            <div id="camErr" class="cam-err" style="display:none">
+                <i class="fas fa-video-slash"></i>
+            </div>
+            <div class="cam-live-row">
+                <span class="cam-dot-live"></span>
+                <span data-ar="مراقبة مباشرة" data-en="Live Proctoring">مراقبة مباشرة</span>
+            </div>
+        </div>
+
+        <!-- تفاصيل الكشف -->
+        <div class="det-section">
+            <div class="det-row">
+                <span class="det-lbl" data-ar="الوجوه المكتشفة" data-en="Faces Detected">الوجوه المكتشفة</span>
+                <span class="det-val" id="detFaceRow">—</span>
+            </div>
+            <div class="det-row">
+                <span class="det-lbl" data-ar="اتجاه النظر" data-en="Gaze Direction">اتجاه النظر</span>
+                <span class="det-val" id="detGazeRow">—</span>
+            </div>
+            <div class="det-row">
+                <span class="det-lbl" data-ar="وضع الرأس" data-en="Head Pose">وضع الرأس</span>
+                <span class="det-val" id="detHeadRow">—</span>
+            </div>
+            <div class="det-row">
+                <span class="det-lbl" data-ar="التلفون" data-en="Phone">التلفون</span>
+                <span class="det-val det-ok" id="detPhoneRow">—</span>
+            </div>
+            <div class="det-row">
+                <span class="det-lbl" data-ar="نشاط الصوت" data-en="Audio Activity">نشاط الصوت</span>
+                <span class="det-val det-ok" id="detAudioRow"
+                      data-ar="هادئ ✓" data-en="Quiet ✓">هادئ ✓</span>
+            </div>
+        </div>
+
+        <!-- سجل الأحداث -->
+        <div class="log-section">
+            <div class="log-title">
+                <i class="fas fa-history"></i>
+                <span data-ar="سجل الأحداث الحي" data-en="Live Event Log">سجل الأحداث الحي</span>
+            </div>
+            <div class="log-list" id="liveLog"></div>
+        </div>
+
+    </aside>
+
+    <!-- ── Main Questions Area ── -->
+    <main class="exam-main">
+        <div id="questionsContainer"></div>
+
+        <div class="submit-area">
+            <button class="submit-btn" id="submitBtn" onclick="submitExam()">
+                <i class="fas fa-paper-plane"></i>
+                <span data-ar="تسليم الامتحان" data-en="Submit Exam">تسليم الامتحان</span>
+            </button>
+        </div>
+    </main>
+
+</div><!-- end exam-body -->
+
+<!-- ══════════════════════════════════════════════════
+     RESULT OVERLAY
+══════════════════════════════════════════════════ -->
+<div class="result-overlay" id="resultOverlay" style="display:none">
+    <div class="result-card">
+        <div class="result-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="result-title" id="resultTitle"
+             data-ar="انتهى الامتحان" data-en="Exam Finished">انتهى الامتحان</div>
+        <div class="result-score" id="resultScore"></div>
+        <div class="result-redirect" data-ar="سيتم تحويلك خلال 10 ثوانٍ..."
+             data-en="Redirecting in 10 seconds...">سيتم تحويلك خلال 10 ثوانٍ...</div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     CHEAT WARNING
+══════════════════════════════════════════════════ -->
+<div class="cheat-overlay" id="cheatOverlay">
+    <div class="cheat-box">
+        <div id="cheatIcon">⚠️</div>
+        <div class="cheat-ttl" id="cheatTitle"></div>
+        <div class="cheat-body" id="cheatMsg"></div>
+        <div class="cheat-cnt"  id="cheatCounter"></div>
+    </div>
+</div>
+
+<script>
+    const EXAM_ID      = {{ exam_id | tojson }};
+    const STUDENT_NAME = {{ student_name | tojson }};
+</script>
+<script src="../static/plexus.js"></script>
+<script src="../static/script.js"></script>
+</body>
+</html>

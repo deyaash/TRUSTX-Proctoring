@@ -1,0 +1,321 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUSTX — نظام الامتحانات الذكي</title>
+    <link rel="stylesheet" href="../static/trustix.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: var(--tx-font-ar);
+            background: var(--tx-bg);
+            color: var(--tx-white);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .page-wrap {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 440px;
+            padding: 20px;
+        }
+
+        /* Logo */
+        .logo-area {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo-mark {
+            width: 60px; height: 60px; border-radius: 16px;
+            background: var(--tx-green);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: 900; color: #0d1117;
+            margin: 0 auto 14px;
+            box-shadow: 0 0 32px var(--tx-green-glow);
+        }
+        .logo-name {
+            font-size: 28px; font-weight: 800; letter-spacing: 2px;
+            color: var(--tx-white);
+        }
+        .logo-name span { color: var(--tx-green); }
+        .logo-tagline {
+            font-size: 13px; color: var(--tx-muted); margin-top: 6px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex; background: var(--tx-surface2);
+            border-radius: 10px; padding: 4px; margin-bottom: 24px;
+            border: 1px solid var(--tx-border);
+        }
+        .tab-btn {
+            flex: 1; padding: 9px; border: none; border-radius: 8px;
+            background: transparent; cursor: pointer;
+            font-family: var(--tx-font-ar); font-size: 13px; font-weight: 600;
+            color: var(--tx-muted); transition: .2s;
+        }
+        .tab-btn.active { background: var(--tx-surface); color: var(--tx-white); }
+
+        /* Form */
+        .form-box { display: none; }
+        .form-box.active { display: block; }
+
+        .field { margin-bottom: 16px; }
+        .field-icon-wrap { position: relative; }
+        .field-icon {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--tx-muted); font-size: 14px;
+        }
+        .field-icon-wrap .tx-input { padding-right: 40px; }
+
+        .submit-btn {
+            width: 100%; padding: 13px;
+            background: var(--tx-green); color: #0d1117;
+            border: none; border-radius: var(--tx-radius);
+            font-family: var(--tx-font-ar); font-size: 15px; font-weight: 800;
+            cursor: pointer; transition: .2s; margin-top: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .submit-btn:hover {
+            background: #4dca5f;
+            box-shadow: 0 0 24px var(--tx-green-glow);
+        }
+        .submit-btn:disabled { background: var(--tx-surface2); color: var(--tx-muted); cursor: not-allowed; }
+
+        .err-box {
+            background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3);
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 13px; color: var(--tx-danger);
+            margin-bottom: 14px; display: none; align-items: center; gap: 8px;
+        }
+        .err-box.show { display: flex; }
+
+        .divider { text-align: center; color: var(--tx-muted); font-size: 12px; margin: 16px 0; }
+
+        .footer-note {
+            text-align: center; font-size: 12px; color: var(--tx-muted); margin-top: 28px;
+        }
+        .footer-note span { color: var(--tx-green); }
+
+        .lang-toggle {
+            position: fixed; top: 16px; left: 16px; z-index: 100;
+        }
+        .lang-toggle button {
+            background: var(--tx-surface2); border: 1px solid var(--tx-border);
+            color: var(--tx-white); border-radius: 8px;
+            padding: 7px 14px; cursor: pointer; font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+            transition: .2s;
+        }
+        .lang-toggle button:hover {
+            background: var(--tx-surface); border-color: var(--tx-green);
+            color: var(--tx-green);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="trustix-canvas"></canvas>
+
+<div class="lang-toggle">
+    <button onclick="toggleLang()">
+        <i class="fas fa-globe"></i><span id="langLabel">EN</span>
+    </button>
+</div>
+
+<div class="page-wrap tx-content">
+
+    <div class="logo-area">
+        <div class="logo-mark">T</div>
+        <div class="logo-name">TRUST<span>X</span></div>
+        <div class="logo-tagline" data-ar="نظام الامتحانات الذكي المراقَب بالذكاء الاصطناعي" data-en="AI-Powered Intelligent Exam Proctoring System">نظام الامتحانات الذكي المراقَب بالذكاء الاصطناعي</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tabSignin" onclick="switchTab('signin')">
+            <i class="fas fa-sign-in-alt"></i> <span data-ar="تسجيل الدخول" data-en="Sign In">تسجيل الدخول</span>
+        </button>
+        <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">
+            <i class="fas fa-user-plus"></i> <span data-ar="إنشاء حساب" data-en="Sign Up">إنشاء حساب</span>
+        </button>
+    </div>
+
+    <!-- Sign In -->
+    <div class="form-box active" id="formSignin">
+        <div class="err-box" id="signinErr"><i class="fas fa-times-circle"></i><span id="signinErrTxt"></span></div>
+        <div class="field">
+            <label class="tx-label" data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</label>
+            <div class="field-icon-wrap">
+                <i class="field-icon fas fa-envelope"></i>
+                <input class="tx-input" id="email" type="text" placeholder="example@mail.com">
+            </div>
+        </div>
+        <div class="field">
+            <label class="tx-label" data-ar="كلمة المرور" data-en="Password">كلمة المرور</label>
+            <div class="field-icon-wrap">
+                <i class="field-icon fas fa-lock"></i>
+                <input class="tx-input" id="password" type="password" placeholder="••••••••"
+                       onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+        </div>
+        <button class="submit-btn" id="loginBtn" onclick="doLogin()">
+            <i class="fas fa-sign-in-alt"></i> <span data-ar="دخول" data-en="Sign In">دخول</span>
+        </button>
+    </div>
+
+    <!-- Sign Up -->
+    <div class="form-box" id="formSignup">
+        <div class="err-box" id="signupErr"><i class="fas fa-times-circle"></i><span id="signupErrTxt"></span></div>
+        <div class="field">
+            <label class="tx-label" data-ar="البريد الإلكتروني" data-en="Email">البريد الإلكتروني</label>
+            <div class="field-icon-wrap">
+                <i class="field-icon fas fa-envelope"></i>
+                <input class="tx-input" id="email-signup" type="email" placeholder="example@mail.com">
+            </div>
+        </div>
+        <div class="field">
+            <label class="tx-label" data-ar="اسم المستخدم" data-en="Username">اسم المستخدم</label>
+            <div class="field-icon-wrap">
+                <i class="field-icon fas fa-user"></i>
+                <input class="tx-input" id="username-signup" type="text"
+                       data-placeholder-ar="اسم المستخدم" data-placeholder-en="Username"
+                       placeholder="اسم المستخدم">
+            </div>
+        </div>
+        <div class="field">
+            <label class="tx-label" data-ar="كلمة المرور" data-en="Password">كلمة المرور</label>
+            <div class="field-icon-wrap">
+                <i class="field-icon fas fa-lock"></i>
+                <input class="tx-input" id="password-signup" type="password" placeholder="••••••••">
+            </div>
+        </div>
+        <div class="field">
+            <label class="tx-label" data-ar="تأكيد كلمة المرور" data-en="Confirm Password">تأكيد كلمة المرور</label>
+            <div class="field-icon-wrap">
+                <i class="field-icon fas fa-lock"></i>
+                <input class="tx-input" id="confirm-password-signup" type="password" placeholder="••••••••"
+                       onkeydown="if(event.key==='Enter') doSignup()">
+            </div>
+        </div>
+        <button class="submit-btn" id="signupBtn" onclick="doSignup()">
+            <i class="fas fa-user-plus"></i> <span data-ar="إنشاء الحساب" data-en="Create Account">إنشاء الحساب</span>
+        </button>
+    </div>
+
+    <div class="footer-note">
+        <span>TRUSTX</span> — AI-Powered Exam Proctoring System
+    </div>
+</div>
+
+<script src="../static/plexus.js"></script>
+<script src="../static/i18n.js"></script>
+<script>
+const _errMsgsAr = {
+    fillAll:'يرجى ملء جميع الحقول', passNoMatch:'كلمتا المرور غير متطابقتين',
+    wrongCreds:'البريد الإلكتروني أو كلمة المرور غير صحيحة', serverErr:'خطأ في الاتصال بالخادم',
+    signupErr:'البريد أو الاسم مستخدم مسبقاً',
+    loggingIn:'<i class="fas fa-spinner fa-spin"></i> جارٍ الدخول...',
+    welcome:'<i class="fas fa-check"></i> مرحباً!',
+    creatingAcc:'<i class="fas fa-spinner fa-spin"></i> جارٍ الإنشاء...',
+    created:'<i class="fas fa-check"></i> تم! سجّل دخولك الآن',
+};
+const _errMsgsEn = {
+    fillAll:'Please fill in all fields', passNoMatch:'Passwords do not match',
+    wrongCreds:'Incorrect email or password', serverErr:'Server connection error',
+    signupErr:'Email or username already in use',
+    loggingIn:'<i class="fas fa-spinner fa-spin"></i> Signing in...',
+    welcome:'<i class="fas fa-check"></i> Welcome!',
+    creatingAcc:'<i class="fas fa-spinner fa-spin"></i> Creating account...',
+    created:'<i class="fas fa-check"></i> Done! Sign in now',
+};
+let _errMsgs = _errMsgsAr;
+document.addEventListener('langchange', e => { _errMsgs = e.detail==='ar' ? _errMsgsAr : _errMsgsEn; });
+
+// ── Tabs ─────────────────────────────────────────────
+function switchTab(tab) {
+    document.getElementById('formSignin').classList.toggle('active', tab==='signin');
+    document.getElementById('formSignup').classList.toggle('active', tab==='signup');
+    document.getElementById('tabSignin').classList.toggle('active', tab==='signin');
+    document.getElementById('tabSignup').classList.toggle('active', tab==='signup');
+}
+
+function showErr(id, msg) {
+    const box = document.getElementById(id);
+    document.getElementById(id + 'Txt').textContent = msg;
+    box.classList.add('show');
+}
+function hideErr(id) { document.getElementById(id).classList.remove('show'); }
+
+function doLogin() {
+    hideErr('signinErr');
+    const email = document.getElementById('email').value.trim();
+    const pass  = document.getElementById('password').value;
+    if (!email || !pass) { showErr('signinErr', _errMsgs.fillAll); return; }
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.innerHTML = _errMsgs.loggingIn;
+
+    fetch('http://127.0.0.1:5000/login_data', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email, password: pass})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data === true) {
+            btn.innerHTML = _errMsgs.welcome;
+            window.location.replace('/dashboard');
+        } else {
+            showErr('signinErr', _errMsgs.wrongCreds);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span data-ar="دخول" data-en="Sign In">' + (currentLang==='ar'?'دخول':'Sign In') + '</span>';
+        }
+    })
+    .catch(() => {
+        showErr('signinErr', _errMsgs.serverErr);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span data-ar="دخول" data-en="Sign In">' + (currentLang==='ar'?'دخول':'Sign In') + '</span>';
+    });
+}
+
+function doSignup() {
+    hideErr('signupErr');
+    const email   = document.getElementById('email-signup').value.trim();
+    const user    = document.getElementById('username-signup').value.trim();
+    const pass    = document.getElementById('password-signup').value;
+    const confirm = document.getElementById('confirm-password-signup').value;
+
+    if (!email || !user || !pass) { showErr('signupErr', _errMsgs.fillAll); return; }
+    if (pass !== confirm)         { showErr('signupErr', _errMsgs.passNoMatch); return; }
+
+    const btn = document.getElementById('signupBtn');
+    btn.disabled = true; btn.innerHTML = _errMsgs.creatingAcc;
+
+    fetch('http://127.0.0.1:5000/signup_data', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({signupEmail: email, username: user, signupPassword: pass})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.message && data.message.includes('successfully')) {
+            btn.innerHTML = _errMsgs.created;
+            setTimeout(() => switchTab('signin'), 1500);
+        } else {
+            showErr('signupErr', _errMsgs.signupErr);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> <span data-ar="إنشاء الحساب" data-en="Create Account">' + (currentLang==='ar'?'إنشاء الحساب':'Create Account') + '</span>';
+        }
+    })
+    .catch(() => {
+        showErr('signupErr', _errMsgs.serverErr);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> <span data-ar="إنشاء الحساب" data-en="Create Account">' + (currentLang==='ar'?'إنشاء الحساب':'Create Account') + '</span>';
+    });
+}
+</script>
+</body>
+</html>

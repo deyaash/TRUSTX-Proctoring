@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRUSTX — تحليل الامتحان</title>
+    <link rel="stylesheet" href="../static/trustix.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--tx-font-ar); background:var(--tx-bg); color:var(--tx-white); min-height:100vh; }
+
+        .main { max-width:1040px; margin:28px auto; padding:0 20px 60px; position:relative; z-index:1; }
+        .page-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+        .page-sub   { color:var(--tx-muted); font-size:13px; margin-bottom:28px; }
+
+        /* Stats */
+        .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+        .stat-card {
+            background:var(--tx-surface); border:1px solid var(--tx-border);
+            border-radius:14px; padding:20px 16px; text-align:center;
+        }
+        .stat-val { font-size:30px; font-weight:800; margin-bottom:4px; }
+        .stat-lbl { font-size:11px; color:var(--tx-muted); text-transform:uppercase; letter-spacing:.5px; }
+        .stat-card.g .stat-val { color:var(--tx-green); }
+        .stat-card.b .stat-val { color:#58a6ff; }
+        .stat-card.r .stat-val { color:var(--tx-danger); }
+        .stat-card.a .stat-val { color:var(--tx-warn); }
+
+        /* Chart */
+        .section {
+            background:var(--tx-surface); border:1px solid var(--tx-border);
+            border-radius:14px; margin-bottom:18px; overflow:hidden;
+        }
+        .sec-hdr {
+            padding:14px 20px; border-bottom:1px solid var(--tx-border);
+            font-size:13px; font-weight:700; color:var(--tx-muted);
+            text-transform:uppercase; letter-spacing:.5px;
+            display:flex; align-items:center; gap:8px;
+        }
+        .sec-hdr i { color:var(--tx-green); }
+        .chart-area { padding:20px; }
+        .bar-chart { display:flex; align-items:flex-end; gap:6px; height:110px; }
+        .bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:0; }
+        .bar { width:100%; border-radius:4px 4px 0 0; transition:.6s; min-height:4px; }
+        .bar-pct { font-size:10px; font-weight:700; color:var(--tx-muted); }
+        .bar-name { font-size:10px; color:var(--tx-muted); text-align:center;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; }
+
+        /* Score bar */
+        .score-bar-bg { width:100px; height:6px; background:var(--tx-surface2); border-radius:3px; margin-top:5px; }
+        .score-bar-fill { height:6px; border-radius:3px; }
+
+        /* Cheat events */
+        .cheat-list { list-style:none; display:flex; flex-direction:column; gap:3px; }
+        .cheat-item { display:flex; align-items:flex-start; gap:6px; font-size:11px; color:var(--tx-danger); }
+        .cheat-time { color:var(--tx-muted); min-width:52px; flex-shrink:0; }
+
+        .empty { text-align:center; padding:48px; color:var(--tx-muted); }
+        .empty i { font-size:34px; margin-bottom:12px; display:block; opacity:.3; }
+    </style>
+</head>
+<body>
+<canvas id="trustix-canvas"></canvas>
+
+<header class="tx-header tx-content">
+    <button class="tx-btn tx-btn-ghost" onclick="window.location.href='/dashboard'" style="font-size:13px;padding:7px 14px;">
+        <i class="fas fa-arrow-right"></i> <span data-ar="رجوع" data-en="Back">رجوع</span>
+    </button>
+    <div class="tx-logo" style="font-size:15px;">
+        <div class="tx-logo-icon" style="width:26px;height:26px;font-size:13px;">T</div>
+        TRUST<span>X</span>
+    </div>
+    <div style="flex:1"></div>
+    <div style="font-size:13px;color:var(--tx-muted);" id="headerSub"></div>
+    <button class="lang-btn-shared" onclick="toggleLang()" style="margin-right:8px;">
+        <i class="fas fa-globe"></i><span id="langLabel">EN</span>
+    </button>
+</header>
+
+<div class="main">
+    <div class="page-title" id="pageTitle" data-ar="جارٍ التحميل..." data-en="Loading...">جارٍ التحميل...</div>
+    <div class="page-sub" id="pageSub"></div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card b"><div class="stat-val" id="sCount">—</div><div class="stat-lbl" data-ar="المتقدمون" data-en="Students">المتقدمون</div></div>
+        <div class="stat-card g"><div class="stat-val" id="sAvg">—</div><div class="stat-lbl" data-ar="متوسط الدرجة" data-en="Avg Score">متوسط الدرجة</div></div>
+        <div class="stat-card r"><div class="stat-val" id="sCheaters">—</div><div class="stat-lbl" data-ar="لديهم مخالفات" data-en="With Violations">لديهم مخالفات</div></div>
+        <div class="stat-card a"><div class="stat-val" id="sAvgViol">—</div><div class="stat-lbl" data-ar="متوسط المخالفات" data-en="Avg Violations">متوسط المخالفات</div></div>
+    </div>
+
+    <!-- Chart -->
+    <div class="section">
+        <div class="sec-hdr"><i class="fas fa-chart-bar"></i> <span data-ar="توزيع الدرجات" data-en="Score Distribution">توزيع الدرجات</span></div>
+        <div class="chart-area">
+            <div class="bar-chart" id="scoreChart">
+                <div class="empty" style="width:100%;padding:20px"><i class="fas fa-chart-bar"></i><span data-ar="لا توجد بيانات" data-en="No data">لا توجد بيانات</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="section">
+        <div class="sec-hdr"><i class="fas fa-users"></i> <span data-ar="قائمة المتقدمين" data-en="Students List">قائمة المتقدمين</span></div>
+        <div id="tableWrap"><div class="empty"><i class="fas fa-user-graduate"></i><span data-ar="لا يوجد متقدمون بعد" data-en="No students yet">لا يوجد متقدمون بعد</span></div></div>
+    </div>
+</div>
+
+<script src="../static/plexus.js"></script>
+<script src="../static/i18n.js"></script>
+<script>
+const EXAM_ID    = {{ exam_id }};
+const EXAM_TITLE = {{ exam_title | tojson }};
+
+const AN = {
+    ar: { analysis:'تحليل: ', lastSub:'آخر تسليم: ', total:' — إجمالي ', student:' طالب',
+          clean:'نظيف', viol:'مخالفات',
+          thStudent:'الطالب', thScore:'الدرجة', thPct:'النسبة',
+          thViol:'المخالفات', thEvents:'أحداث مشبوهة', thTime:'وقت التسليم',
+          noEvents:'لا يوجد' },
+    en: { analysis:'Analysis: ', lastSub:'Last submit: ', total:' — Total ', student:' students',
+          clean:'Clean', viol:'violations',
+          thStudent:'Student', thScore:'Score', thPct:'Pct',
+          thViol:'Violations', thEvents:'Suspicious Events', thTime:'Submit Time',
+          noEvents:'None' }
+};
+
+document.getElementById('headerSub').textContent = EXAM_TITLE;
+
+function pct(s,t){ return t>0 ? Math.round(s/t*100) : 0; }
+function barColor(p){ return p>=70?'var(--tx-green)': p>=50?'var(--tx-warn)':'var(--tx-danger)'; }
+
+function violBadge(v){
+    const t = AN[getCurrentLang()];
+    if(v===0) return `<span class="tx-badge tx-badge-green"><i class="fas fa-check"></i> ${t.clean}</span>`;
+    if(v<=2)  return `<span class="tx-badge tx-badge-amber"><i class="fas fa-exclamation"></i> ${v} ${t.viol}</span>`;
+    return `<span class="tx-badge tx-badge-red"><i class="fas fa-times"></i> ${v} ${t.viol}</span>`;
+}
+
+let _results = [];
+
+function renderAnalytics() {
+    const t = AN[getCurrentLang()];
+
+    document.getElementById('pageTitle').textContent = t.analysis + EXAM_TITLE;
+
+    if (!_results.length) return;
+
+    const count   = _results.length;
+    const avgPct  = (_results.reduce((s,r)=>s+pct(r.score,r.total),0)/count).toFixed(1);
+    const cheaters= _results.filter(r=>r.violations>0).length;
+    const avgViol = (_results.reduce((s,r)=>s+r.violations,0)/count).toFixed(1);
+
+    document.getElementById('sCount').textContent    = count;
+    document.getElementById('sAvg').textContent      = avgPct+'%';
+    document.getElementById('sCheaters').textContent = cheaters;
+    document.getElementById('sAvgViol').textContent  = avgViol;
+    document.getElementById('pageSub').textContent   =
+        t.lastSub + _results[0].submitted_at + t.total + count + t.student;
+
+    // Chart
+    const chart = document.getElementById('scoreChart');
+    chart.innerHTML = '';
+    const sorted = [..._results].sort((a,b)=>pct(b.score,b.total)-pct(a.score,a.total));
+    const maxP = Math.max(...sorted.map(r=>pct(r.score,r.total)),1);
+    sorted.forEach(r=>{
+        const p = pct(r.score,r.total);
+        const h = Math.max(Math.round(p/maxP*90),4);
+        const col = document.createElement('div');
+        col.className='bar-col'; col.title=r.student_name+': '+p+'%';
+        col.innerHTML=
+            '<div class="bar-pct">'+p+'%</div>'+
+            '<div class="bar" style="height:'+h+'px;background:'+barColor(p)+'"></div>'+
+            '<div class="bar-name">'+r.student_name.split(' ')[0]+'</div>';
+        chart.appendChild(col);
+    });
+
+    // Table
+    const wrap = document.getElementById('tableWrap');
+    wrap.innerHTML=`<table class="tx-table"><thead><tr>
+        <th>#</th><th>${t.thStudent}</th><th>${t.thScore}</th><th>${t.thPct}</th>
+        <th>${t.thViol}</th><th>${t.thEvents}</th><th>${t.thTime}</th>
+        </tr></thead><tbody id="tbody"></tbody></table>`;
+
+    const tbody = document.getElementById('tbody');
+    _results.forEach((r,i)=>{
+        const p   = pct(r.score,r.total);
+        const col = barColor(p);
+        const evts= (r.cheat_events||[]).map(e=>
+            '<li class="cheat-item">'+
+            '<span class="cheat-time">'+(e.time||'')+'</span>'+
+            '<i class="fas fa-exclamation-triangle" style="font-size:9px;margin-top:2px;flex-shrink:0"></i>'+
+            '<span>'+(e.reason||e)+'</span></li>'
+        ).join('');
+
+        const tr=document.createElement('tr');
+        tr.innerHTML=
+            '<td style="color:var(--tx-muted);font-size:12px">'+(i+1)+'</td>'+
+            '<td style="font-weight:700">'+r.student_name+'</td>'+
+            '<td>'+r.score+' / '+r.total+
+                '<div class="score-bar-bg"><div class="score-bar-fill" style="width:'+p+'%;background:'+col+'"></div></div>'+
+            '</td>'+
+            '<td style="font-weight:800;color:'+col+'">'+p+'%</td>'+
+            '<td>'+violBadge(r.violations)+'</td>'+
+            '<td>'+(evts?'<ul class="cheat-list">'+evts+'</ul>':
+                `<span style="color:var(--tx-muted);font-size:12px">${t.noEvents}</span>`)+'</td>'+
+            '<td style="color:var(--tx-muted);font-size:12px">'+r.submitted_at+'</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+fetch('/exam_results_data/'+EXAM_ID)
+.then(r=>r.json())
+.then(results=>{ _results = results; renderAnalytics(); })
+.catch(e=>console.error(e));
+
+document.addEventListener('langchange', renderAnalytics);
+</script>
+</body>
+</html>
